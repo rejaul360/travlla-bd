@@ -1,0 +1,168 @@
+"use client";
+
+import { useState } from "react";
+import { 
+  MapPin, Phone, Mail, Clock, Send, CheckCircle2, 
+  MessageSquare, Sparkles, ShieldCheck, User 
+} from "lucide-react";
+
+export default function ContactPage() {
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitted(true);
+    setFormData({ name: "", email: "", phone: "", message: "" });
+  };
+
+  return (
+    <div className="min-h-screen bg-[#fafbfc] py-14 sm:py-24 notranslate text-slate-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Page Header */}
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-teal-100 text-teal-900 text-sm font-bold mb-4 border border-teal-200/80">
+            <MessageSquare className="w-4 h-4 text-teal-700" /> সার্বক্ষণিক সহায়তা
+          </span>
+          <h1 className="text-4xl sm:text-6xl font-black text-slate-950 tracking-tight leading-tight">
+            আমাদের সাথে <span className="text-teal-600">যোগাযোগ করুন</span>
+          </h1>
+          <p className="mt-4 text-slate-600 text-base sm:text-lg font-medium leading-relaxed">
+            যেকোনো ভ্রমণ সংক্রান্ত তথ্য, কাস্টম ট্যুর প্যাকেজ তৈরি অথবা করপোরেট বুকিংয়ের জন্য আমাদের মেসেজ পাঠান।
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+          
+          {/* Contact Details Card */}
+          <div className="lg:col-span-5 space-y-8">
+            <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-800 space-y-8">
+              <h3 className="text-2xl font-black text-white border-b border-slate-800 pb-4">
+                অফিস ও হেল্পডেস্ক
+              </h3>
+
+              <div className="space-y-6 text-base sm:text-lg">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center shrink-0">
+                    <MapPin className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-white text-base sm:text-lg">প্রধান কার্যালয়</h5>
+                    <p className="text-slate-400 text-sm sm:text-base mt-1 leading-relaxed">
+                      হাউস-২৪, রোড-১১, ব্লক-ডি, গুলশান-২, ঢাকা-১২১২, বাংলাদেশ।
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center shrink-0">
+                    <Phone className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-white text-base sm:text-lg">হেল্পলাইন ও হোয়াটসঅ্যাপ</h5>
+                    <a href="tel:+8801700000000" className="text-teal-400 font-bold block mt-1 hover:underline">
+                      +৮৮০ ১৭০০-০০০০০০
+                    </a>
+                    <span className="text-slate-400 text-xs sm:text-sm">২৪ ঘণ্টা খোলা (সপ্তাহে ৭ দিন)</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center shrink-0">
+                    <Mail className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-white text-base sm:text-lg">ইমেইল ঠিকানা</h5>
+                    <p className="text-slate-400 text-sm sm:text-base mt-1">support@travllabd.com</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-slate-800 flex items-center gap-3 text-sm text-slate-300">
+                <ShieldCheck className="w-5 h-5 text-teal-400 shrink-0" />
+                <span>আমরা আপনার ব্যক্তিগত তথ্যের সর্বোচ্চ গোপনীয়তা বজায় রাখি।</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Form (16px Input Standard) */}
+          <div className="lg:col-span-7 bg-white rounded-3xl p-8 sm:p-12 border border-slate-200/90 shadow-sm">
+            <h3 className="text-2xl sm:text-3xl font-black text-slate-950 mb-8">
+              একটি বার্তা পাঠান
+            </h3>
+
+            <form onSubmit={handleSubmit} className="space-y-7">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-base font-bold text-slate-900 mb-2">আপনার পুরো নাম *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="নাম লিখুন"
+                    className="w-full px-5 py-4 rounded-2xl border border-slate-300 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-base font-bold text-slate-900 mb-2">মোবাইল নম্বর *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="০১৭০০-০০০০০০"
+                    className="w-full px-5 py-4 rounded-2xl border border-slate-300 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-base font-bold text-slate-900 mb-2">ইমেইল ঠিকানা *</label>
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="name@example.com"
+                  className="w-full px-5 py-4 rounded-2xl border border-slate-300 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-base font-bold text-slate-900 mb-2">আপনার বার্তা লিখুন *</label>
+                <textarea
+                  rows={4}
+                  required
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  placeholder="আপনার ট্যুর পরিকল্পনা, তারিখ অথবা যেকোনো জিজ্ঞাসা বিস্তারিত লিখুন..."
+                  className="w-full px-5 py-4 rounded-2xl border border-slate-300 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-5 px-8 bg-teal-600 hover:bg-teal-700 text-white font-black text-lg rounded-2xl shadow-xl shadow-teal-600/30 transition flex items-center justify-center gap-3 active:scale-[0.99] cursor-pointer"
+              >
+                <Send className="w-5 h-5" />
+                <span>মেসেজ পাঠান</span>
+              </button>
+
+              {submitted && (
+                <div className="p-5 rounded-2xl bg-emerald-50 text-emerald-900 border-2 border-emerald-200 flex items-center gap-3 text-base font-bold">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+                  <span>ধন্যবাদ! আপনার বার্তাটি আমাদের কাছে পৌঁছেছে। দ্রুত যোগাযোগ করা হবে।</span>
+                </div>
+              )}
+            </form>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  );
+}

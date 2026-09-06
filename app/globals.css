@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --primary: #0f766e;        /* Deep Teal */
+  --primary-hover: #115e59;
+  --accent: #f97316;         /* Sunset Orange */
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+  
+  /* Primary font: Hind Siliguri for Bangla & clean editorial look */
+  --font-sans: var(--font-hind-siliguri), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --text-base: 1rem;
+}
+
+/* ১. মিনিমাম বেস ফন্ট সাইজ ১৬ পিক্সেল নিশ্চিত করা */
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  font-size: 16px;
+  /* scroll-behavior: smooth; -> Lenis use korle eta proyojon nei */
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 1rem; /* ১৬ পিক্সেল */
+  line-height: 1.65;
+  color: var(--foreground);
+  background-color: #fafbfc;
+}
+
+/* ২. বড় ও আকর্ষণীয় এডিটোরিয়াল হেডিং স্কেল (Bespoke Figma Look) */
+h1, .text-h1 {
+  font-size: clamp(2.5rem, 5vw, 3.75rem); /* ৪০px থেকে ৬০px */
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+h2, .text-h2 {
+  font-size: clamp(1.875rem, 3.5vw, 2.5rem); /* ৩০px থেকে ৪০px */
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+h3, .text-h3 {
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem); /* ২২px থেকে ২৮px */
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* ৩. মসৃণ বাটন ও কার্ড মাইক্রো-ইন্টারেকশন */
+button, a {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ৪. হরাইজন্টাল স্ক্রলবার হাইড ইউটিলিটি */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
