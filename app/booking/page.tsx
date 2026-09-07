@@ -10,6 +10,7 @@ import {
   CreditCard, Clock, Star, ArrowLeft, ShieldCheck, Check,
   Compass, LayoutGrid
 } from "lucide-react";
+import { fallbackDestinations } from "@/lib/wordpress";
 
 interface DestinationItem {
   id: string;
@@ -27,8 +28,8 @@ interface DestinationItem {
 }
 
 const TIERS = [
-  { id: "Standard", name: "স্ট্যান্ডার্ড প্যাকেজ", multiplier: 1, desc: "মানসম্মত রিসোর্ট ও শেয়ার্ড পরিবহন ব্যবস্থা" },
-  { id: "Deluxe", name: "ডিলাক্স প্যাকেজ", multiplier: 1.35, desc: "প্রিমিয়াম ভিউ রিসোর্ট ও আরামদায়ক এসি ট্রাভেল" },
+  { id: "Standard", name: "স্ট্যান্ডার্ড প্যাকেজ", multiplier: 1, desc: "মানসম্মত রিসোর্ট ও শেয়ার্ড পরিবহন ব্যবস্থা" },
+  { id: "Deluxe", name: "ডিলাক্স প্যাকেজ", multiplier: 1.35, desc: "প্রিমিয়াম ভিউ রিসোর্ট ও আরামদায়ক এসি ট্রাভেল" },
 ];
 
 function BookingFormInner() {
@@ -38,7 +39,8 @@ function BookingFormInner() {
   const dateParam = searchParams.get("date") || "";
   const guestsParam = parseInt(searchParams.get("guests") || "1", 10);
 
-  const [allDestinations, setAllDestinations] = useState<DestinationItem[]>([]);
+  // ০ সেকেন্ডে ইনস্ট্যান্ট লোড করার জন্য শুরুতেই লোকাল ফলব্যাক ডেটা সেট রাখা হয়েছে
+  const [allDestinations, setAllDestinations] = useState<DestinationItem[]>(fallbackDestinations as any);
   const [currentPackage, setCurrentPackage] = useState<DestinationItem | null>(null);
   const [guests, setGuests] = useState<number>(!isNaN(guestsParam) && guestsParam > 0 ? guestsParam : 1);
   const [selectedTier, setSelectedTier] = useState<string>("Standard");
@@ -46,60 +48,67 @@ function BookingFormInner() {
 
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", notes: "" });
   const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
   const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  // ইউজার URL-এ কোনো dest এনেছে কি না
   const isDirectFromCard = Boolean(destParam.trim());
 
+  // হেল্পার: ডেস্টিনেশন খোঁজার ফাংশন
+  const findDestination = (data: DestinationItem[]) => {
+    if (!isDirectFromCard) return null;
+
+    const rawTarget = destParam.trim().toLowerCase();
+    const decodedTarget = decodeURIComponent(destParam).trim().toLowerCase();
+
+    let found = data.find((d) => String(d.post_id) === rawTarget || String(d.id) === rawTarget);
+    if (!found) {
+      found = data.find((d) => d.slug && d.slug.toLowerCase() === decodedTarget);
+    }
+    if (!found) {
+      found = data.find((d) => 
+        d.title.toLowerCase().includes(decodedTarget) || 
+        decodedTarget.includes(d.title.toLowerCase())
+      );
+    }
+    if (!found) {
+      if (rawTarget.includes("tanguar") || decodedTarget.includes("টাঙ্গুয়ার") || decodedTarget.includes("হাওড়")) {
+        found = data.find(d => d.title.includes("টাঙ্গুয়ার") || d.title.includes("হাওড়"));
+      } else if (rawTarget.includes("cox") || decodedTarget.includes("কক্সবাজার")) {
+        found = data.find(d => d.title.includes("কক্সবাজার"));
+      } else if (rawTarget.includes("sajek") || decodedTarget.includes("সাজেক")) {
+        found = data.find(d => d.title.includes("সাজেক"));
+      } else if (rawTarget.includes("bandarban") || decodedTarget.includes("বান্দরবান")) {
+        found = data.find(d => d.title.includes("বান্দরবান"));
+      } else if (rawTarget.includes("sreemangal") || decodedTarget.includes("শ্রীমঙ্গল")) {
+        found = data.find(d => d.title.includes("শ্রীমঙ্গল"));
+      }
+    }
+    return found || null;
+  };
+
+  // মাউন্টের সাথে সাথেই ইনিশিয়াল প্যাকেজ ম্যাচিং (নো ওয়েটিং)
   useEffect(() => {
-    setFetching(true);
-    fetch("https://ams.wpelitee.com/wp-json/travlla/v1/destinations")
+    if (isDirectFromCard) {
+      const match = findDestination(fallbackDestinations as any);
+      if (match) setCurrentPackage(match);
+    }
+  }, [destParam, isDirectFromCard]);
+
+  // ব্যাকগ্রাউন্ডে ওয়ার্ডপ্রেসের সাথে লাইভ সিঙ্ক (UI আটকাবে না)
+  useEffect(() => {
+    fetch("https://ams.wpelitee.com/wp-json/travlla/v1/destinations", { cache: "no-store" })
       .then((res) => res.json())
       .then((data: DestinationItem[]) => {
         if (Array.isArray(data) && data.length > 0) {
           setAllDestinations(data);
-
           if (isDirectFromCard) {
-            const rawTarget = destParam.trim().toLowerCase();
-            const decodedTarget = decodeURIComponent(destParam).trim().toLowerCase();
-
-            let found = data.find((d) => String(d.post_id) === rawTarget || String(d.id) === rawTarget);
-
-            if (!found) {
-              found = data.find((d) => (d.slug && d.slug.toLowerCase() === decodedTarget));
-            }
-
-            if (!found) {
-              found = data.find((d) => 
-                d.title.toLowerCase().includes(decodedTarget) || 
-                decodedTarget.includes(d.title.toLowerCase())
-              );
-            }
-
-            if (!found) {
-              if (rawTarget.includes("tanguar") || decodedTarget.includes("টাঙ্গুয়ার") || decodedTarget.includes("হাওড়")) {
-                found = data.find(d => d.title.includes("টাঙ্গুয়ার") || d.title.includes("হাওড়"));
-              } else if (rawTarget.includes("cox") || decodedTarget.includes("কক্সবাজার")) {
-                found = data.find(d => d.title.includes("কক্সবাজার"));
-              } else if (rawTarget.includes("sajek") || decodedTarget.includes("সাজেক")) {
-                found = data.find(d => d.title.includes("সাজেক"));
-              } else if (rawTarget.includes("bandarban") || decodedTarget.includes("বান্দরবান")) {
-                found = data.find(d => d.title.includes("বান্দরবান"));
-              } else if (rawTarget.includes("sreemangal") || decodedTarget.includes("শ্রীমঙ্গল")) {
-                found = data.find(d => d.title.includes("শ্রীমঙ্গল"));
-              }
-            }
-
-            setCurrentPackage(found || null);
-          } else {
-            // ডিরেক্ট আসলে কোনো জোরপূর্বক ডিফল্ট প্যাকেজ থাকবে না
-            setCurrentPackage(null);
+            const match = findDestination(data);
+            if (match) setCurrentPackage(match);
           }
         }
       })
-      .catch((err) => console.error("Error loading destination:", err))
-      .finally(() => setFetching(false));
+      .catch(() => {
+        console.warn("Using local cache for destinations");
+      });
   }, [destParam, isDirectFromCard]);
 
   const currentTierObj = TIERS.find((t) => t.id === selectedTier) || TIERS[0];
@@ -107,12 +116,17 @@ function BookingFormInner() {
   const pricePerPerson = Math.round(basePrice * currentTierObj.multiplier);
   const totalEstimate = pricePerPerson * guests;
 
+  const handleInputChange = (field: string, value: string) => {
+    if (status) setStatus(null);
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPackage) {
       setStatus({
         type: "error",
-        message: "দয়া করে বুকিং করার জন্য তালিকা থেকে যেকোনো একটি ট্যুর প্যাকেজ নির্বাচন করুন।",
+        message: "দয়া করে বুকিং করার জন্য তালিকা থেকে যেকোনো একটি ট্যুর প্যাকেজ নির্বাচন করুন।",
       });
       return;
     }
@@ -139,33 +153,27 @@ function BookingFormInner() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "বুকিং সম্পন্ন করা যায়নি।");
+      if (!res.ok) throw new Error(data.message || "বুকিং সম্পন্ন করা যায়নি।");
 
       setStatus({
         type: "success",
-        message: "আপনার বুকিং অনুরোধটি সফলভাবে গ্রহণ করা হয়েছে! আমাদের টিম দ্রুত ফোনে যোগাযোগ করে নিশ্চিত করবে।",
+        message: "আপনার বুকিং অনুরোধটি সফলভাবে গ্রহণ করা হয়েছে! আমাদের টিম দ্রুত ফোনে যোগাযোগ করে নিশ্চিত করবে।",
       });
 
       setFormData({ name: "", email: "", phone: "", notes: "" });
       setTravelDate("");
+
+      // ৪ সেকেন্ড পর স্ট্যাটাস অটোমেটিক চলে যাবে
+      setTimeout(() => setStatus(null), 4000);
     } catch (err: unknown) {
       setStatus({
         type: "error",
-        message: err instanceof Error ? err.message : "কোনো সমস্যা হয়েছে। আবার চেষ্টা করুন।",
+        message: err instanceof Error ? err.message : "কোনো সমস্যা হয়েছে। আবার চেষ্টা করুন।",
       });
     } finally {
       setLoading(false);
     }
   };
-
-  if (fetching) {
-    return (
-      <div className="py-32 text-center">
-        <Loader2 className="w-10 h-10 text-teal-600 animate-spin mx-auto mb-4" />
-        <p className="text-base sm:text-lg font-bold text-slate-600">ট্যুর ও প্যাকেজের তথ্য লোড করা হচ্ছে...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
@@ -200,7 +208,10 @@ function BookingFormInner() {
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => setCurrentPackage(item)}
+                    onClick={() => {
+                      if (status) setStatus(null);
+                      setCurrentPackage(item);
+                    }}
                     className={`text-left p-3.5 rounded-2xl border-2 transition-all flex flex-col justify-between group cursor-pointer ${
                       isSelected
                         ? "border-teal-600 bg-teal-50/60 ring-4 ring-teal-600/10 shadow-sm"
@@ -298,7 +309,6 @@ function BookingFormInner() {
                 <button
                   type="button"
                   onClick={() => {
-                    // ফিল্টার রিসেট করে সব প্যাকেজের চয়েস ওপেন করা
                     router.push("/booking");
                     setCurrentPackage(null);
                   }}
@@ -319,7 +329,7 @@ function BookingFormInner() {
 
               <div className="mt-7 py-5 px-6 sm:px-8 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <span className="flex items-center gap-2.5 text-base sm:text-lg font-bold text-slate-800">
-                  <Clock className="w-5 h-5 text-teal-600" /> মেয়াদ: {currentPackage.duration}
+                  <Clock className="w-5 h-5 text-teal-600" /> মেয়াদ: {currentPackage.duration}
                 </span>
                 <div className="text-left sm:text-right">
                   <span className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-slate-500 block mb-0.5">বেস প্যাকেজ রেট</span>
@@ -350,7 +360,7 @@ function BookingFormInner() {
           </div>
         )}
 
-        {/* BOOKING FORM (UNTOUCHED, LARGER FIGMA STANDARD) */}
+        {/* BOOKING FORM */}
         <div className="bg-white rounded-3xl p-7 sm:p-12 border border-slate-200/90 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-10">
             
@@ -364,7 +374,10 @@ function BookingFormInner() {
                   type="date"
                   required
                   value={travelDate}
-                  onChange={(e) => setTravelDate(e.target.value)}
+                  onChange={(e) => {
+                    if (status) setStatus(null);
+                    setTravelDate(e.target.value);
+                  }}
                   className="w-full px-5 py-4 rounded-2xl border border-slate-300 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 outline-none text-base sm:text-lg font-semibold text-slate-800 bg-slate-50/70 transition"
                 />
               </div>
@@ -376,8 +389,11 @@ function BookingFormInner() {
                 <div className="flex items-center gap-3.5">
                   <button
                     type="button"
-                    onClick={() => setGuests(Math.max(1, guests - 1))}
-                    className="w-14 h-14 rounded-2xl border border-slate-300 bg-slate-50 font-black text-slate-800 hover:bg-slate-100 hover:border-slate-400 transition active:scale-95 text-2xl flex items-center justify-center shadow-xs"
+                    onClick={() => {
+                      if (status) setStatus(null);
+                      setGuests(Math.max(1, guests - 1));
+                    }}
+                    className="w-14 h-14 rounded-2xl border border-slate-300 bg-slate-50 font-black text-slate-800 hover:bg-slate-100 hover:border-slate-400 transition active:scale-95 text-2xl flex items-center justify-center shadow-xs cursor-pointer"
                     aria-label="Decrease traveler"
                   >
                     -
@@ -387,8 +403,11 @@ function BookingFormInner() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setGuests(guests + 1)}
-                    className="w-14 h-14 rounded-2xl border border-slate-300 bg-slate-50 font-black text-slate-800 hover:bg-slate-100 hover:border-slate-400 transition active:scale-95 text-2xl flex items-center justify-center shadow-xs"
+                    onClick={() => {
+                      if (status) setStatus(null);
+                      setGuests(guests + 1);
+                    }}
+                    className="w-14 h-14 rounded-2xl border border-slate-300 bg-slate-50 font-black text-slate-800 hover:bg-slate-100 hover:border-slate-400 transition active:scale-95 text-2xl flex items-center justify-center shadow-xs cursor-pointer"
                     aria-label="Increase traveler"
                   >
                     +
@@ -407,7 +426,10 @@ function BookingFormInner() {
                   <button
                     type="button"
                     key={tier.id}
-                    onClick={() => setSelectedTier(tier.id)}
+                    onClick={() => {
+                      if (status) setStatus(null);
+                      setSelectedTier(tier.id);
+                    }}
                     className={`p-6 rounded-2xl border-2 text-left transition-all cursor-pointer ${
                       selectedTier === tier.id
                         ? "border-teal-600 bg-teal-50/70 ring-4 ring-teal-600/10 shadow-sm"
@@ -439,7 +461,7 @@ function BookingFormInner() {
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="পুরো নাম লিখুন (যেমন: মো: তানভীর আহমেদ)"
                     className="w-full px-5 py-4 rounded-2xl border border-slate-300 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 outline-none transition"
                   />
@@ -453,7 +475,7 @@ function BookingFormInner() {
                     type="tel"
                     required
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="০১৭০০-০০০০০০"
                     className="w-full px-5 py-4 rounded-2xl border border-slate-300 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 outline-none transition"
                   />
@@ -467,7 +489,7 @@ function BookingFormInner() {
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
                   placeholder="name@example.com"
                   className="w-full px-5 py-4 rounded-2xl border border-slate-300 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 outline-none transition"
                 />
@@ -480,7 +502,7 @@ function BookingFormInner() {
                 <textarea
                   rows={3}
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={(e) => handleInputChange("notes", e.target.value)}
                   placeholder="রিসোর্ট ভিউ, পিকআপ লোকেশন বা বিশেষ কোনো চাহিদা থাকলে বিস্তারিত লিখুন..."
                   className="w-full px-5 py-4 rounded-2xl border border-slate-300 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 outline-none transition"
                 />
@@ -549,7 +571,7 @@ function BookingFormInner() {
             </div>
 
             <div className="flex justify-between items-center text-slate-300">
-              <span className="text-slate-400 font-medium">ভ্রমণের মেয়াদ:</span>
+              <span className="text-slate-400 font-medium">ভ্রমণের মেয়াদ:</span>
               <span className="font-bold text-white">
                 {currentPackage ? currentPackage.duration : "—"}
               </span>
@@ -614,7 +636,7 @@ export default function BookingPage() {
             আপনার পছন্দের <span className="text-teal-600">ট্যুর বুক করুন</span>
           </h1>
           <p className="mt-4 text-slate-600 text-base sm:text-lg font-medium leading-relaxed">
-            গন্তব্য নির্বাচন করুন, সদস্য সংখ্যা ও তারিখ দিয়ে সরাসরি ট্যুর বুকিং নিশ্চিত করুন।
+            গন্তব্য নির্বাচন করুন, সদস্য সংখ্যা ও তারিখ দিয়ে সরাসরি ট্যুর বুকিং নিশ্চিত করুন।
           </p>
         </div>
 
