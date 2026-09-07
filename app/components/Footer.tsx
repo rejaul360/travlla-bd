@@ -31,7 +31,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-teal-400 shrink-0" />
-                <a href="tel:+8801700000000" className="hover:text-white transition">+৮৮০ ১৭০০-০০০০০০</a>
+                <a href="tel:+8801700000000" className="hover:text-white transition">+৮৮০ ০১৭১৭-৯৮০৯১৭</a>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-teal-400 shrink-0" />
@@ -90,7 +90,7 @@ export default function Footer() {
         <div className="mt-16 pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
           <p>© {new Date().getFullYear()} ট্রাভলা.বিডি। সর্বস্বত্ব সংরক্ষিত।</p>
           <p className="flex items-center gap-1">
-            বাংলাদেশের পর্যটন শিল্পের সেবায় নিয়োজিত <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+            বাংলাদেশের পর্যটন শিল্পের সেবায় নিয়োজিত <Heart className="w-4 h-6 text-red-500 fill-red-500" />
           </p>
         </div>
       </div>
