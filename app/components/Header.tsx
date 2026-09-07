@@ -19,7 +19,7 @@ export default function Header() {
           <div className="flex items-center gap-6 text-xs sm:text-sm">
             <a href="tel:+8801700000000" className="flex items-center gap-1.5 hover:text-teal-400 transition">
               <Phone className="w-3.5 h-3.5 text-teal-400" />
-              <span>+৮৮০ ০১৭১৭-৯৮০৯১৭</span>
+              <span>+880 1717980917</span>
             </a>
             <span className="hidden md:inline text-slate-500">|</span>
             <span className="hidden md:inline text-slate-300">কাস্টম ট্যুর প্ল্যান চান?</span>
